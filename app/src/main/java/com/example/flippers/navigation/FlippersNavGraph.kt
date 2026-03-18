@@ -7,6 +7,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.flippers.ui.screen.HomeScreen
+import com.example.flippers.ui.screen.SplashFeaturesScreen
+import com.example.flippers.ui.screen.SplashReadyScreen
 import com.example.flippers.ui.screen.SplashScreen
 import com.example.flippers.ui.screen.scanner.BookScannerScreen
 import com.example.flippers.ui.screen.scanner.DocumentScannerScreen
@@ -21,9 +23,29 @@ fun FlippersNavGraph(navController: NavHostController) {
 
         composable(Screen.Splash.route) {
             SplashScreen(
+                onNext = {
+                    navController.navigate(Screen.SplashFeatures.route) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.SplashFeatures.route) {
+            SplashFeaturesScreen(
+                onNext = {
+                    navController.navigate(Screen.SplashReady.route) {
+                        popUpTo(Screen.SplashFeatures.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.SplashReady.route) {
+            SplashReadyScreen(
                 onGetStarted = {
                     navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                        popUpTo(Screen.SplashReady.route) { inclusive = true }
                     }
                 }
             )

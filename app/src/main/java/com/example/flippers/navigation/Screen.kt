@@ -2,6 +2,8 @@ package com.example.flippers.navigation
 
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
+    data object SplashFeatures : Screen("splash_features")
+    data object SplashReady : Screen("splash_ready")
     data object Onboarding : Screen("onboarding")
     data object LetYouIn : Screen("let_you_in")
     data object SignUp : Screen("sign_up")

@@ -68,7 +68,7 @@ private val SubtleWhite = Color(0xB3FFFFFF) // 70 %
 private val GhostWhite = Color(0x33FFFFFF) // 20 %
 
 @Composable
-fun SplashScreen(onGetStarted: () -> Unit) {
+fun SplashScreen(onNext: () -> Unit) {
 
     // ---------- entrance animatables ----------
     val logoScale = remember { Animatable(0f) }
@@ -297,16 +297,35 @@ fun SplashScreen(onGetStarted: () -> Unit) {
 
             Spacer(modifier = Modifier.height(28.dp))
 
+            // --- page indicator ---
+            Row(
+                modifier = Modifier
+                    .alpha(buttonAlpha.value)
+                    .padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(3) { i ->
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .size(if (i == 0) 24.dp else 8.dp, 8.dp)
+                            .background(
+                                if (i == 0) AccentCyan else GhostWhite,
+                                RoundedCornerShape(4.dp)
+                            )
+                    )
+                }
+            }
+
             // --- CTA button ---
             Button(
-                onClick = onGetStarted,
+                onClick = onNext,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp)
                     .alpha(buttonAlpha.value)
                     .offset(y = buttonOffsetY.value.dp)
                     .drawBehind {
-                        // button glow
                         drawRoundRect(
                             brush = Brush.horizontalGradient(
                                 listOf(BrandBlue.copy(alpha = 0.4f * glowPulse), AccentCyan.copy(alpha = 0.3f * glowPulse))
@@ -322,7 +341,7 @@ fun SplashScreen(onGetStarted: () -> Unit) {
                 )
             ) {
                 Text(
-                    text = "Get Started",
+                    text = "Next",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.sp,
