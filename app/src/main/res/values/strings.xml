@@ -1,0 +1,71 @@
+<resources>
+    <string name="app_name">ProScan</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">Scan Documents</string>
+    <string name="onboarding_desc_1">Quickly scan documents, receipts, and notes with your camera</string>
+    <string name="onboarding_title_2">QR &amp; Barcode</string>
+    <string name="onboarding_desc_2">Instantly read QR codes and barcodes with advanced scanning</string>
+    <string name="onboarding_title_3">Organize &amp; Share</string>
+    <string name="onboarding_desc_3">Keep your scans organized and share them easily</string>
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
+
+    <!-- Auth -->
+    <string name="sign_in">Sign In</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="remember_me">Remember me</string>
+    <string name="or_continue_with">or continue with</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="sign_in_with_password">Sign in with password</string>
+    <string name="lets_you_in">Let\'s you in</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="continue_with_facebook">Continue with Facebook</string>
+    <string name="continue_with_apple">Continue with Apple</string>
+    <string name="finish">Finish</string>
+    <string name="sign_up_success">Sign Up Successful!</string>
+    <string name="sign_up_success_message">Your account has been created successfully.</string>
+    <string name="go_to_home">Go to Home</string>
+    <string name="go_to_sign_in">Go to Sign In</string>
+    <string name="enter_email">Enter your email address</string>
+    <string name="continue_btn">Continue</string>
+    <string name="verify_otp">Verify OTP</string>
+    <string name="otp_sent_message">We\'ve sent a verification code to your email</string>
+    <string name="resend_code">Resend Code</string>
+    <string name="create_new_password">Create New Password</string>
+    <string name="new_password">New Password</string>
+    <string name="reset_password_success">Password Reset Successful!</string>
+    <string name="reset_password_success_message">Your password has been reset successfully.</string>
+
+    <!-- Profile -->
+    <string name="fill_your_profile">Fill Your Profile</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="gender">Gender</string>
+    <string name="date_of_birth">Date of Birth</string>
+
+    <!-- Home -->
+    <string name="recent_files">Recent Files</string>
+    <string name="no_recent_files">No recent files</string>
+    <string name="scan_your_first_document">Scan your first document to get started</string>
+    <string name="search_files">Search files…</string>
+    <string name="coming_soon">Coming soon</string>
+
+    <!-- Scanner -->
+    <string name="qr_scanner">QR Scanner</string>
+    <string name="document_scanner">Document Scanner</string>
+    <string name="book_scanner">Book Scanner</string>
+    <string name="id_card_scanner">ID Card Scanner</string>
+    <string name="scan_result">Scan Result</string>
+    <string name="retake">Retake</string>
+    <string name="save">Save</string>
+    <string name="share">Share</string>
+    <string name="camera_permission_required">Camera permission is required to scan documents</string>
+    <string name="grant_permission">Grant Permission</string>
+</resources>
