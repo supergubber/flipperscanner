@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="proscan_primary">#FF4D6EF5</color>
-    <color name="proscan_primary_dark">#FF3A56C4</color>
-    <color name="proscan_primary_light">#FF8FA3F8</color>
-    <color name="proscan_scanner_dark">#FF1A1A2E</color>
-    <color name="splash_background">#FF4D6EF5</color>
+    <color name="proscan_primary">#FFEE9E8E</color>
+    <color name="proscan_primary_dark">#FFD4856F</color>
+    <color name="proscan_primary_light">#FFF5C4B8</color>
+    <color name="proscan_scanner_dark">#FF190933</color>
+    <color name="splash_background">#FFC49AB5</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 </resources>

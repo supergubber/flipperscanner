@@ -1,190 +1,282 @@
 package com.example.flippers.ui.screen
 
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Compress
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Draw
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MergeType
-import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DocumentScanner
+import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Splitscreen
-import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flippers.ui.components.FileCard
 import com.example.flippers.ui.components.ProScanTextField
-import com.example.flippers.ui.components.ToolChip
+import com.example.flippers.ui.theme.AccentBlue
+import com.example.flippers.ui.theme.AccentGreen
+import com.example.flippers.ui.theme.AccentOrange
+import com.example.flippers.ui.theme.AccentPurple
 import com.example.flippers.viewmodel.HomeViewModel
 
-private data class Tool(
-    val label: String,
-    val icon: ImageVector,
-    val action: String
-)
-
-private val tools = listOf(
-    Tool("Scan Code", Icons.Default.QrCodeScanner, "scan_code"),
-    Tool("Watermark", Icons.Default.WaterDrop, "coming_soon"),
-    Tool("eSign PDF", Icons.Default.Draw, "coming_soon"),
-    Tool("Split PDF", Icons.Default.Splitscreen, "coming_soon"),
-    Tool("Merge PDF", Icons.Default.MergeType, "coming_soon"),
-    Tool("Protect PDF", Icons.Default.Lock, "coming_soon"),
-    Tool("Compress PDF", Icons.Default.Compress, "coming_soon"),
-    Tool("All Tools", Icons.Default.MoreHoriz, "coming_soon")
-)
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onScanClick: () -> Unit,
     onQrScanClick: () -> Unit,
+    onGenerateQrClick: () -> Unit = {},
+    onPdfToolsClick: () -> Unit = {},
+    onAnalyticsClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val recentFiles by viewModel.recentFiles.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val context = LocalContext.current
+    var showBanner by remember { mutableStateOf(true) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "ProScan",
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onScanClick,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Scan", tint = MaterialTheme.colorScheme.onPrimary)
-            }
-        }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+    // ── Animated gradient ──
+    val infiniteTransition = rememberInfiniteTransition(label = "bg")
+    val animOffset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(6000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "gradientShift"
+    )
+
+    val bgBrush = Brush.linearGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.06f)
+        ),
+        start = Offset(animOffset * 800f, 0f),
+        end = Offset(800f + animOffset * 400f, 1200f)
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bgBrush)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-            ProScanTextField(
-                value = searchQuery,
-                onValueChange = viewModel::onSearchQueryChange,
-                label = "Search files...",
-                leadingIcon = Icons.Default.Search,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(tools) { tool ->
-                    ToolChip(
-                        label = tool.label,
-                        icon = tool.icon,
-                        onClick = {
-                            if (tool.action == "scan_code") {
-                                onQrScanClick()
-                            } else {
-                                Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+            // ── Header ──
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 8.dp)
+                ) {
+                    Text(
+                        "Good morning,",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        "ProScan",
+                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 30.sp),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // ── Upgrade Banner ──
+            item {
+                AnimatedVisibility(visible = showBanner, enter = fadeIn(), exit = fadeOut()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 6.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                        AccentOrange.copy(alpha = 0.8f)
+                                    )
+                                )
+                            )
+                            .padding(16.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Upgrade to Pro", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                                Text("Unlimited scans & premium tools", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.85f))
+                            }
+                            IconButton(onClick = { showBanner = false }) {
+                                Icon(Icons.Default.Close, "Dismiss", tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+                }
+            }
 
-            Text(
-                text = "Recent Files",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+            // ── Search ──
+            item {
+                ProScanTextField(
+                    value = searchQuery,
+                    onValueChange = viewModel::onSearchQueryChange,
+                    label = "Search files...",
+                    leadingIcon = Icons.Default.Search,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // ── Quick Actions ──
+            item {
+                Text(
+                    "Quick Actions",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 20.dp, top = 16.dp, bottom = 10.dp)
+                )
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        QuickActionCard(Icons.Default.QrCodeScanner, "Scan Code", "Read QR & barcodes", AccentBlue, onQrScanClick, Modifier.weight(1f))
+                        QuickActionCard(Icons.Default.QrCode2, "Generate QR", "Create any QR code", AccentPurple, onGenerateQrClick, Modifier.weight(1f))
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        QuickActionCard(Icons.Default.PictureAsPdf, "PDF Tools", "Edit & merge PDFs", AccentOrange, onPdfToolsClick, Modifier.weight(1f))
+                        QuickActionCard(Icons.Default.BarChart, "Analytics", "View scan stats", AccentGreen, onAnalyticsClick, Modifier.weight(1f))
+                    }
+                }
+            }
+
+            // ── Recent Files ──
+            item {
+                Text(
+                    "Recent Files",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 20.dp, top = 24.dp, bottom = 10.dp)
+                )
+            }
 
             if (recentFiles.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Description,
-                            contentDescription = null,
-                            modifier = Modifier.padding(8.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "No recent files",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Scan your first document to get started",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 1.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(40.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier.size(64.dp).clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.DocumentScanner, null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            Text("No files yet", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Spacer(Modifier.height(4.dp))
+                            Text("Tap the scan button to get started", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                        }
                     }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(recentFiles) { file ->
-                        FileCard(
-                            document = file,
-                            onShareClick = {
-                                val intent = viewModel.getShareIntent(file)
-                                context.startActivity(intent)
-                            },
-                            onMoreClick = { viewModel.deleteDocument(file) }
-                        )
-                    }
+                items(recentFiles) { file ->
+                    FileCard(
+                        document = file,
+                        onShareClick = { context.startActivity(viewModel.getShareIntent(file)) },
+                        onMoreClick = { viewModel.deleteDocument(file) },
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+                    )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun QuickActionCard(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    color: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.height(120.dp).clickable(onClick = onClick),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier.size(42.dp).clip(RoundedCornerShape(12.dp)).background(color.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, title, Modifier.size(22.dp), tint = color)
+            }
+            Column {
+                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
             }
         }
     }

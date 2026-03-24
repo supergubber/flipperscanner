@@ -6,14 +6,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [User::class, ScannedDocument::class],
-    version = 2,
+    entities = [User::class, ScannedDocument::class, GeneratedQrCode::class],
+    version = 3,
     exportSchema = true
 )
 abstract class ProScanDatabase : RoomDatabase() {
 
     abstract fun userDao(): UserDao
     abstract fun scannedDocumentDao(): ScannedDocumentDao
+    abstract fun generatedQrCodeDao(): GeneratedQrCodeDao
 
     companion object {
         @Volatile

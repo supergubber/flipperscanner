@@ -22,7 +22,7 @@ fun ScannerOverlay(
     modifier: Modifier = Modifier,
     cutoutRatio: Float = 0.7f,
     aspectRatio: Float = 1f,
-    cornerColor: Color = Color(0xFF4D6EF5)
+    cornerColor: Color = Color(0xFFEE9E8E)
 ) {
     Canvas(modifier = modifier.fillMaxSize()) {
         val cutoutWidth = size.width * cutoutRatio
