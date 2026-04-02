@@ -11,6 +11,9 @@ interface GeneratedQrCodeDao {
     @Query("SELECT * FROM generated_qr_codes ORDER BY createdAt DESC")
     fun getAll(): Flow<List<GeneratedQrCode>>
 
+    @Query("SELECT * FROM generated_qr_codes WHERE id = :id")
+    suspend fun getById(id: Long): GeneratedQrCode?
+
     @Insert
     suspend fun insert(qrCode: GeneratedQrCode): Long
 

@@ -1,7 +1,11 @@
 package com.example.flippers.viewmodel
 
 import android.app.Application
+import android.content.ContentValues
 import android.graphics.Bitmap
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.flippers.data.local.GeneratedQrCode
@@ -34,6 +38,9 @@ class QrGeneratorViewModel(application: Application) : AndroidViewModel(applicat
     private val _qrColorArgb = MutableStateFlow(0xFF000000.toInt())
     val qrColorArgb: StateFlow<Int> = _qrColorArgb.asStateFlow()
 
+    private val _selectedQrCode = MutableStateFlow<GeneratedQrCode?>(null)
+    val selectedQrCode: StateFlow<GeneratedQrCode?> = _selectedQrCode.asStateFlow()
+
     fun selectType(type: String) {
         if (_selectedType.value != type) {
             _selectedType.value = type
@@ -57,6 +64,20 @@ class QrGeneratorViewModel(application: Application) : AndroidViewModel(applicat
         return bitmap
     }
 
+    fun buildSmartLabel(): String {
+        val fields = _contentFields.value
+        return when (_selectedType.value) {
+            "URL" -> fields["url"]?.take(40) ?: "URL"
+            "Text" -> fields["text"]?.take(30) ?: "Text"
+            "WiFi" -> "WiFi: ${fields["ssid"] ?: "Network"}"
+            "Contact" -> "Contact: ${fields["name"] ?: "Unknown"}"
+            "Email" -> fields["email"] ?: "Email"
+            "Phone" -> fields["phone"] ?: "Phone"
+            "Payment" -> "UPI: ${fields["upi"] ?: "Payment"}"
+            else -> _selectedType.value
+        }
+    }
+
     fun saveQrCode(label: String) {
         val bitmap = _generatedBitmap.value ?: return
         val content = buildQrContent() ?: return
@@ -76,6 +97,43 @@ class QrGeneratorViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun saveToGallery(bitmap: Bitmap): Boolean {
+        return try {
+            val context = getApplication<Application>()
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "QR_${System.currentTimeMillis()}.png")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/Flippers")
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
+            }
+            val uri = context.contentResolver.insert(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues
+            ) ?: return false
+
+            context.contentResolver.openOutputStream(uri)?.use { stream ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                context.contentResolver.update(uri, contentValues, null, null)
+            }
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun loadQrCodeById(id: Long) {
+        viewModelScope.launch {
+            _selectedQrCode.value = dao.getById(id)
+        }
+    }
+
     fun deleteQrCode(qrCode: GeneratedQrCode) {
         viewModelScope.launch {
             if (qrCode.imagePath.isNotEmpty()) {
@@ -88,7 +146,10 @@ class QrGeneratorViewModel(application: Application) : AndroidViewModel(applicat
     private fun buildQrContent(): String? {
         val fields = _contentFields.value
         return when (_selectedType.value) {
-            "URL" -> fields["url"]?.takeIf { it.isNotBlank() }
+            "URL" -> fields["url"]?.takeIf { it.isNotBlank() }?.let { url ->
+                if (url.startsWith("http://") || url.startsWith("https://")) url
+                else "https://$url"
+            }
             "Text" -> fields["text"]?.takeIf { it.isNotBlank() }
             "WiFi" -> {
                 val ssid = fields["ssid"] ?: return null

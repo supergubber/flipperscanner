@@ -39,6 +39,7 @@ import com.example.flippers.ui.screen.pdftools.MergePdfScreen
 import com.example.flippers.ui.screen.pdftools.PdfToolsScreen
 import com.example.flippers.ui.screen.pdftools.WatermarkScreen
 import com.example.flippers.ui.screen.qr.QrContentInputScreen
+import com.example.flippers.ui.screen.qr.QrDetailScreen
 import com.example.flippers.ui.screen.qr.QrGeneratorScreen
 import com.example.flippers.ui.screen.qr.QrHistoryScreen
 import com.example.flippers.ui.screen.qr.QrPreviewScreen
@@ -51,6 +52,9 @@ import com.example.flippers.ui.screen.settings.SettingsScreen
 import com.example.flippers.ui.screen.subscription.PaywallScreen
 import com.example.flippers.ui.screen.subscription.SubscriptionScreen
 import com.example.flippers.ui.screen.subscription.UsageDashboardScreen
+import com.example.flippers.ui.screen.qr.EventQrEditorScreen
+import com.example.flippers.ui.screen.qr.EventQrScreen
+import com.example.flippers.viewmodel.EventQrViewModel
 import com.example.flippers.viewmodel.QrGeneratorViewModel
 
 // bottomNavRoutes is imported from BottomNavBar.kt
@@ -196,7 +200,8 @@ fun FlippersNavGraph(navController: NavHostController) {
                     onTypeSelected = { type ->
                         navController.navigate(Screen.QrContentInput.createRoute(type))
                     },
-                    onHistoryClick = { navController.navigate(Screen.QrHistory.route) }
+                    onHistoryClick = { navController.navigate(Screen.QrHistory.route) },
+                    onEventQrClick = { navController.navigate(Screen.EventQrSelector.route) }
                 )
             }
 
@@ -243,6 +248,49 @@ fun FlippersNavGraph(navController: NavHostController) {
                 val qrViewModel: QrGeneratorViewModel = viewModel(parentEntry)
                 QrHistoryScreen(
                     viewModel = qrViewModel,
+                    onNavigateBack = { navController.popBackStack() },
+                    onItemClick = { qrCodeId ->
+                        navController.navigate(Screen.QrDetail.createRoute(qrCodeId))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.QrDetail.route,
+                arguments = listOf(navArgument("qrCodeId") { type = NavType.LongType })
+            ) { backStackEntry ->
+                val qrCodeId = backStackEntry.arguments?.getLong("qrCodeId") ?: 0L
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.QrGenerator.route)
+                }
+                val qrViewModel: QrGeneratorViewModel = viewModel(parentEntry)
+                QrDetailScreen(
+                    qrCodeId = qrCodeId,
+                    viewModel = qrViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            // ---- Event QR ----
+
+            composable(Screen.EventQrSelector.route) {
+                val eventQrViewModel: EventQrViewModel = viewModel(it)
+                EventQrScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onEventTypeSelected = { eventType ->
+                        eventQrViewModel.selectEventType(eventType)
+                        navController.navigate(Screen.EventQrEditor.route)
+                    }
+                )
+            }
+
+            composable(Screen.EventQrEditor.route) {
+                val parentEntry = remember(it) {
+                    navController.getBackStackEntry(Screen.EventQrSelector.route)
+                }
+                val eventQrViewModel: EventQrViewModel = viewModel(parentEntry)
+                EventQrEditorScreen(
+                    viewModel = eventQrViewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

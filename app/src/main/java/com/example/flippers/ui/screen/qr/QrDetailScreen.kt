@@ -2,15 +2,10 @@ package com.example.flippers.ui.screen.qr
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.widget.Toast
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,12 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -39,6 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -46,55 +40,57 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.example.flippers.ui.theme.AccentBlue
+import com.example.flippers.ui.theme.AccentGreen
+import com.example.flippers.ui.theme.AccentOrange
+import com.example.flippers.ui.theme.AccentPurple
+import com.example.flippers.ui.theme.AccentRed
+import com.example.flippers.ui.theme.AccentTeal
 import com.example.flippers.viewmodel.QrGeneratorViewModel
-import kotlinx.coroutines.delay
 import java.io.File
 import java.io.FileOutputStream
 
-private val colorOptions = listOf(
-    0xFF000000.toInt() to "Black",
-    0xFF1565C0.toInt() to "Blue",
-    0xFFC62828.toInt() to "Red",
-    0xFF2E7D32.toInt() to "Green",
-    0xFF6A1B9A.toInt() to "Purple",
-    0xFFE65100.toInt() to "Orange"
-)
+private fun typeAccentColor(type: String): Color = when (type) {
+    "URL" -> AccentBlue
+    "Text" -> AccentGreen
+    "WiFi" -> AccentPurple
+    "Contact" -> AccentOrange
+    "Email" -> AccentTeal
+    "Phone" -> Color(0xFF5C6BC0)
+    "Payment" -> AccentRed
+    else -> AccentBlue
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QrPreviewScreen(
+fun QrDetailScreen(
+    qrCodeId: Long,
     viewModel: QrGeneratorViewModel,
     onNavigateBack: () -> Unit
 ) {
-    val bitmap by viewModel.generatedBitmap.collectAsState()
-    val selectedColor by viewModel.qrColorArgb.collectAsState()
+    val qrCode by viewModel.selectedQrCode.collectAsState()
     val context = LocalContext.current
-    var showSavedCheck by remember { mutableStateOf(false) }
 
-    LaunchedEffect(showSavedCheck) {
-        if (showSavedCheck) {
-            delay(1500)
-            showSavedCheck = false
-        }
+    LaunchedEffect(qrCodeId) {
+        viewModel.loadQrCodeById(qrCodeId)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("QR Code Preview", fontWeight = FontWeight.Bold) },
+                title = { Text("Saved QR Code", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -107,6 +103,31 @@ fun QrPreviewScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
+        val item = qrCode
+        if (item == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "QR code not found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            return@Scaffold
+        }
+
+        val loadedBitmap = remember(item.imagePath) {
+            if (item.imagePath.isNotEmpty() && File(item.imagePath).exists()) {
+                BitmapFactory.decodeFile(item.imagePath)
+            } else null
+        }
+
+        val accentColor = typeAccentColor(item.type)
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -116,14 +137,14 @@ fun QrPreviewScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // QR Code in elevated card
+            // QR image card
             Card(
                 modifier = Modifier
                     .shadow(
                         elevation = 8.dp,
                         shape = RoundedCornerShape(20.dp),
-                        ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        ambientColor = accentColor.copy(alpha = 0.08f),
+                        spotColor = accentColor.copy(alpha = 0.12f)
                     ),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -133,71 +154,71 @@ fun QrPreviewScreen(
                     modifier = Modifier.padding(24.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    bitmap?.let { bmp ->
+                    if (loadedBitmap != null) {
                         Image(
-                            bitmap = bmp.asImageBitmap(),
-                            contentDescription = "Generated QR Code",
+                            bitmap = loadedBitmap.asImageBitmap(),
+                            contentDescription = "Saved QR Code",
                             modifier = Modifier.size(260.dp)
                         )
-                    } ?: Box(
-                        modifier = Modifier
-                            .size(260.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No QR generated",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Color picker
-            Text(
-                "Choose Color",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                colorOptions.forEach { (argb, name) ->
-                    val isSelected = selectedColor == argb
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .then(
-                                if (isSelected) Modifier.border(
-                                    3.dp,
-                                    MaterialTheme.colorScheme.primary,
-                                    CircleShape
-                                ) else Modifier
-                            )
-                            .padding(if (isSelected) 4.dp else 0.dp)
-                            .clip(CircleShape)
-                            .background(Color(argb))
-                            .clickable {
-                                viewModel.setQrColor(argb)
-                                viewModel.generateQrCode()
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isSelected) {
-                            Icon(
-                                Icons.Default.Check,
-                                contentDescription = name,
-                                tint = if (argb == 0xFF000000.toInt()) Color.White else Color.White,
-                                modifier = Modifier.size(18.dp)
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(260.dp)
+                                .background(
+                                    MaterialTheme.colorScheme.surfaceVariant,
+                                    RoundedCornerShape(12.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "Image not available",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Type chip
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = accentColor.copy(alpha = 0.12f)
+            ) {
+                Text(
+                    text = item.type,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accentColor
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Label
+            Text(
+                text = item.label,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Content preview
+            Text(
+                text = item.content,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                textAlign = TextAlign.Center,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -206,15 +227,11 @@ fun QrPreviewScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Save button (primary CTA)
+                // Share button (primary)
                 Button(
                     onClick = {
-                        bitmap?.let { bmp ->
-                            val label = viewModel.buildSmartLabel()
-                            viewModel.saveQrCode(label)
-                            viewModel.saveToGallery(bmp)
-                            showSavedCheck = true
-                            Toast.makeText(context, "QR code saved", Toast.LENGTH_SHORT).show()
+                        loadedBitmap?.let { bmp ->
+                            shareQrBitmapFromDetail(context, bmp)
                         }
                     },
                     modifier = Modifier
@@ -225,36 +242,6 @@ fun QrPreviewScreen(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    AnimatedContent(
-                        targetState = showSavedCheck,
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        label = "save_icon"
-                    ) { saved ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                if (saved) Icons.Default.Check else Icons.Default.Save,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                if (saved) "Saved!" else "Save",
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-                    }
-                }
-
-                // Share button (secondary)
-                OutlinedButton(
-                    onClick = {
-                        bitmap?.let { bmp -> shareQrBitmap(context, bmp) }
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp),
-                    shape = RoundedCornerShape(28.dp)
-                ) {
                     Icon(
                         Icons.Default.Share,
                         contentDescription = null,
@@ -263,6 +250,30 @@ fun QrPreviewScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Share", style = MaterialTheme.typography.labelLarge)
                 }
+
+                // Delete button
+                OutlinedButton(
+                    onClick = {
+                        viewModel.deleteQrCode(item)
+                        Toast.makeText(context, "QR code deleted", Toast.LENGTH_SHORT).show()
+                        onNavigateBack()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Delete", style = MaterialTheme.typography.labelLarge)
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -270,7 +281,7 @@ fun QrPreviewScreen(
     }
 }
 
-private fun shareQrBitmap(context: android.content.Context, bitmap: Bitmap) {
+private fun shareQrBitmapFromDetail(context: android.content.Context, bitmap: Bitmap) {
     val dir = File(context.cacheDir, "shared_qr")
     dir.mkdirs()
     val file = File(dir, "qr_share.png")

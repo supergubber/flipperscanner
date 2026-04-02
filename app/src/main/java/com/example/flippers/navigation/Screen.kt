@@ -34,6 +34,13 @@ sealed class Screen(val route: String) {
     }
     data object QrPreview : Screen("qr_preview")
     data object QrHistory : Screen("qr_history")
+    data object QrDetail : Screen("qr_detail/{qrCodeId}") {
+        fun createRoute(qrCodeId: Long) = "qr_detail/$qrCodeId"
+    }
+
+    // Event QR
+    data object EventQrSelector : Screen("event_qr_selector")
+    data object EventQrEditor : Screen("event_qr_editor")
 
     // Subscription
     data object Subscription : Screen("subscription")

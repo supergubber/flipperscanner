@@ -6,18 +6,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContactPhone
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.History
@@ -39,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -67,21 +72,101 @@ private val qrTypes = listOf(
 fun QrGeneratorScreen(
     onNavigateBack: () -> Unit,
     onTypeSelected: (String) -> Unit,
-    onHistoryClick: () -> Unit
+    onHistoryClick: () -> Unit,
+    onEventQrClick: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Generate QR Code", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") } },
-                actions = { IconButton(onClick = onHistoryClick) { Icon(Icons.Default.History, "History") } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onHistoryClick) {
+                        Icon(Icons.Default.History, "History")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
-            Text("Choose type", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 12.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 20.dp)
+        ) {
+            // ── Event QR Banner ──
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 3.dp,
+                        shape = RoundedCornerShape(20.dp),
+                        ambientColor = AccentPurple.copy(alpha = 0.08f)
+                    )
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable(onClick = onEventQrClick),
+                shape = RoundedCornerShape(20.dp),
+                color = AccentPurple.copy(alpha = 0.08f),
+                tonalElevation = 2.dp
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(AccentPurple.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.Celebration,
+                            "Event QR",
+                            tint = AccentPurple,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Event QR Code",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            "Wedding, Birthday, Party & more",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    Icon(
+                        Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = AccentPurple,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                "Choose type",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            Spacer(Modifier.height(8.dp))
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -91,20 +176,43 @@ fun QrGeneratorScreen(
             ) {
                 items(qrTypes) { type ->
                     Surface(
-                        modifier = Modifier.fillMaxWidth().clickable { onTypeSelected(type.key) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(
+                                elevation = 2.dp,
+                                shape = RoundedCornerShape(20.dp),
+                                ambientColor = Color.Black.copy(alpha = 0.04f)
+                            )
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable { onTypeSelected(type.key) },
                         shape = RoundedCornerShape(20.dp),
                         color = MaterialTheme.colorScheme.surface,
                         tonalElevation = 1.dp
                     ) {
-                        Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Box(
-                                modifier = Modifier.size(50.dp).clip(RoundedCornerShape(14.dp)).background(type.color.copy(alpha = 0.1f)),
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(type.color.copy(alpha = 0.1f)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(type.icon, type.label, Modifier.size(24.dp), tint = type.color)
+                                Icon(
+                                    type.icon,
+                                    type.label,
+                                    Modifier.size(24.dp),
+                                    tint = type.color
+                                )
                             }
                             Spacer(Modifier.height(10.dp))
-                            Text(type.label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                type.label,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }
